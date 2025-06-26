@@ -1,0 +1,371 @@
+{
+  "name": "Linkdin-lead-generation",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "Your_Api_Key"
+            },
+            {
+              "name": "cx",
+              "value": "Your_searchengine_id"
+            },
+            {
+              "name": "q",
+              "value": "site:linkedin.com/in/ \"Founder\" AND \"MVP\" AND \"hiring\""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1440,
+        80
+      ],
+      "id": "d5ef3a8a-f7ee-4a42-aacb-48c8bad8deb3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1660,
+        80
+      ],
+      "id": "fd068358-23ea-4cac-a5b7-29f35a67baf8",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bdc35dfe-0a45-4849-a479-a17b280393cd",
+              "name": "items",
+              "value": "={{ $json.items }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1260,
+        80
+      ],
+      "id": "bc06fc89-1924-47e7-b8c9-8bff023c80d7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items[0].json.items.map(item => {\n  return {\n    json: {\n      name: item.title,\n      snippet: item.snippet,\n      link: item.link\n    }\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1060,
+        80
+      ],
+      "id": "1dea6814-a1fc-402e-9097-9db789506458",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a CEO of a software services company. Based on the title and snippet, rate this lead from 1 to 10 and explain why.\n\nTitle: {{ $json[\"name\"] }}\nDescription: {{ $json[\"snippet\"] }}\n\nRespond in this format:\n{\n  \"score\": <1–10>,\n  \"reason\": \"<short explanation>\"\n}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -820,
+        60
+      ],
+      "id": "21d8a194-a487-4b10-8835-2d61666eca58",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        280
+      ],
+      "id": "820cd2aa-b30f-478f-9085-f5cffc2105c2",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EQ0w63ybDuycLEmY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"score\": 9,\n  \"reason\": \"The person is actively hiring and mentions MVP development.\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        280
+      ],
+      "id": "b03cd09b-1973-4e5c-865c-fe807392a762",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ff522784-616c-4c11-9fb2-749bea33ba7e",
+              "leftValue": "={{ $json.output.score }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -460,
+        60
+      ],
+      "id": "d47c0c2b-4fa6-4e32-9cbe-6449d49fe406",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1JaUSjCOJZDIu63BGimUn5adR7R4vW2tAxzlfK5CJPgg",
+          "mode": "list",
+          "cachedResultName": "Linkedin-Based",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JaUSjCOJZDIu63BGimUn5adR7R4vW2tAxzlfK5CJPgg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JaUSjCOJZDIu63BGimUn5adR7R4vW2tAxzlfK5CJPgg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Score": "={{ $json.output.score }}",
+            "Title": "={{ $('Code').item.json.name }}",
+            "Reason": "={{ $json.output.reason }}",
+            "Linkdin Url": "={{ $('Code').item.json.link }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Linkdin Url",
+              "displayName": "Linkdin Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -120,
+        20
+      ],
+      "id": "50763435-ae68-4df9-a18d-a7f710c8b4ef",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tUIv5s7K8kL2po61",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        280
+      ],
+      "id": "73527f68-1534-4d2a-957f-9cf7f4cfc45a",
+      "name": "No Operation, do nothing"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7c697381-de72-49f7-b337-8ee7972030a7",
+  "meta": {
+    "instanceId": "4bde88f57a1dca9aac7fa0ca7c01896322b81018d0f538fce58b20d4debc6463"
+  },
+  "id": "UDrB9JzlqHUlEPL9",
+  "tags": []
+}
